@@ -1,1957 +1,565 @@
-function main(config) {
-
-  // ================================================================
-  // Clash Mi / Mihomo Perfect-Rules v1.7
-  //
-  // Architecture:
-  //
-  //   Airport Subscription
-  //          ↓
-  //   Preserve Airport Basic Groups
-  //          ↓
-  //   Dynamic Region Groups
-  //          ↓
-  //   Perfect-Rules Service Groups
-  //          ↓
-  //   Remote Rule Providers
-  //
-  // JS:
-  //   Responsible for configuration architecture
-  //
-  // GitHub Rule Providers:
-  //   Responsible for actual routing rules
-  //
-  // Network Test:
-  //   Follow airport's default manual selector
-  //
-  // ================================================================
-
-
-  // ================================================================
-  // 1. Basic configuration
-  // ================================================================
-
-  config["mixed-port"] = 7890;
-
-  config["mode"] = "rule";
-
-  config["unified-delay"] = true;
-
-  config["tcp-concurrent"] = true;
-
-  config["log-level"] = "error";
-
-  config["ipv6"] = false;
-
-  config["allow-lan"] = false;
-
-  config["find-process-mode"] = "always";
-
-  config["keep-alive-interval"] = 30;
-
-  config["keep-alive-idle"] = 30;
-
-  config["disable-keep-alive"] = false;
-
-
-  // ================================================================
-  // 2. Profile
-  // ================================================================
-
-  config["profile"] = {
-
-    "store-selected": true,
-
-    "store-fake-ip": true
-
-  };
-
-
-  // ================================================================
-  // 3. DNS
-  // ================================================================
-
-  config["dns"] = {
-
-    "enable": true,
-
-    "listen": "0.0.0.0:53",
-
-    "prefer-h3": false,
-
-    "ipv6": false,
-
-    "enhanced-mode": "fake-ip",
-
-    "fake-ip-range": "172.19.0.1/16",
-
-    "fake-ip-filter": [
-
-      "+.lan",
-      "+.local",
-      "+.localhost",
-      "+.home.arpa",
-
-      "time.*.com",
-      "time.*.gov",
-      "pool.ntp.org",
-
-      "+.push.apple.com",
-
-      "mesu.apple.com",
-      "swscan.apple.com",
-
-      "captive.apple.com",
-
-      "connectivitycheck.gstatic.com",
-
-      "connectivitycheck.android.com",
-
-      "www.msftconnecttest.com",
-
-      "www.msftncsi.com"
-
-    ],
-
-    "default-nameserver": [
-
-      "223.5.5.5",
-      "119.29.29.29"
-
-    ],
-
-    "nameserver": [
-
-      "https://dns.alidns.com/dns-query",
-      "https://doh.pub/dns-query"
-
-    ],
-
-    "nameserver-policy": {
-
-      "geosite:cn": [
-
-        "https://dns.alidns.com/dns-query",
-        "https://doh.pub/dns-query"
-
-      ],
-
-      "geosite:private": [
-
-        "https://dns.alidns.com/dns-query",
-        "https://doh.pub/dns-query"
-
-      ],
-
-      "geolocation-!cn": [
-
-        "https://cloudflare-dns.com/dns-query",
-        "https://dns.google/dns-query"
-
-      ]
-
-    },
-
-    "proxy-server-nameserver": [
-
-      "https://dns.alidns.com/dns-query",
-      "https://doh.pub/dns-query"
-
-    ],
-
-    "direct-nameserver": [
-
-      "https://dns.alidns.com/dns-query",
-      "https://doh.pub/dns-query"
-
-    ],
-
-    "fallback": [
-
-      "https://cloudflare-dns.com/dns-query",
-      "https://dns.google/dns-query"
-
-    ],
-
-    "fallback-filter": {
-
-      "geoip": true,
-
-      "geoip-code": "CN",
-
-      "geosite": [
-
-        "gfw"
-
-      ],
-
-      "domain": [
-
-        "+.google.com",
-        "+.googleapis.com",
-        "+.googlevideo.com",
-        "+.youtube.com",
-        "+.github.com",
-        "+.openai.com",
-        "+.chatgpt.com",
-        "+.anthropic.com",
-        "+.claude.ai"
-
-      ]
-
-    }
-
-  };
-
-
-  // ================================================================
-  // 4. TUN
-  // ================================================================
-
-  config["tun"] = {
-
-    "enable": true,
-
-    "device": "Clash Mi",
-
-    "stack": "gvisor",
-
-    "dns-hijack": [
-
-      "0.0.0.0:53"
-
-    ],
-
-    "auto-route": true,
-
-    "auto-detect-interface": false,
-
-    "strict-route": true,
-
-    "mtu": 1280,
-
-    "inet4-address": [
-
-      "172.19.0.1/30"
-
-    ],
-
-    "auto-redirect": false,
-
-    "disable-icmp-forwarding": true
-
-  };
-
-
-  // ================================================================
-  // 5. Sniffer
-  // ================================================================
-
-  config["sniffer"] = {
-
-    "enable": true,
-
-    "parse-pure-ip": true,
-
-    "force-dns-mapping": true,
-
-    "override-destination": true,
-
-    "sniff": {
-
-      "HTTP": {
-
-        "ports": [
-
-          80,
-          "8080-8880"
-
-        ]
-
-      },
-
-      "TLS": {
-
-        "ports": [
-
-          443,
-          8443
-
-        ]
-
-      },
-
-      "QUIC": {
-
-        "ports": [
-
-          443,
-          8443
-
-        ]
-
-      }
-
-    },
-
-    "skip-domain": [
-
-      "+.push.apple.com",
-      "+.mijia.cloud"
-
-    ]
-
-  };
-
-
-  // ================================================================
-  // 6. NTP
-  // ================================================================
-
-  config["ntp"] = {
-
-    "enable": true,
-
-    "write-to-system": false,
-
-    "server": "time.apple.com",
-
-    "port": 123,
-
-    "interval": 30
-
-  };
-
-
-  // ================================================================
-  // 7. Original airport proxies
-  // ================================================================
-
-  var originalProxies = Array.isArray(config["proxies"])
-    ? config["proxies"]
-    : [];
-
-
-  var proxyNames = [];
-
-  originalProxies.forEach(function(proxy) {
-
-    if (proxy && proxy.name) {
-
-      proxyNames.push(proxy.name);
-
-    }
-
-  });
-
-
-  // ================================================================
-  // 8. Original airport proxy groups
-  // ================================================================
-
-  var originalGroups = Array.isArray(config["proxy-groups"])
-    ? config["proxy-groups"]
-    : [];
-
-
-  // ================================================================
-  // 9. Perfect-Rules icon CDN
-  // ================================================================
-
-  var iconBaseURL =
-    "https://cdn.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/icons/";
-
-
-  var groupIcons = {
-
-    "一键代理": "Proxy.png",
-
-    "国内直连": "China.png",
-
-    "AI": "AI.png",
-
-    "YouTube": "YouTube.png",
-
-    "Google": "Google.png",
-
-    "GitHub": "GitHub.png",
-
-    "网络检测": "Network-test.png",
-
-    "Netflix": "Netflix.png",
-
-    "Spotify": "Spotify.png",
-
-    "Steam": "Steam.png",
-
-    "Telegram": "Telegram.png",
-
-    "TikTok": "TikTok.png",
-
-    "Apple": "Apple.png",
-
-    "Microsoft": "Microsoft.png",
-
-    "香港": "Hong_Kong.png",
-
-    "台湾": "Taiwan.png",
-
-    "日本": "Japan.png",
-
-    "新加坡": "Singapore.png",
-
-    "韩国": "Korea.png",
-
-    "美国": "United_States.png",
-
-    "加拿大": "Other.png",
-
-    "英国": "Other.png",
-
-    "其他地区": "Other.png"
-
-  };
-
-
-  function getGroupIcon(name) {
-
-    if (!groupIcons[name]) {
-
-      return undefined;
-
-    }
-
-    return iconBaseURL + groupIcons[name];
-
-  }
-
-
-  // ================================================================
-  // 10. Managed groups
-  // ================================================================
-
-  var managedGroups = {
-
-    "一键代理": true,
-
-    "国内直连": true,
-
-    "AI": true,
-
-    "YouTube": true,
-
-    "Google": true,
-
-    "GitHub": true,
-
-    "网络检测": true,
-
-    "Netflix": true,
-
-    "Spotify": true,
-
-    "Steam": true,
-
-    "Telegram": true,
-
-    "TikTok": true,
-
-    "Apple": true,
-
-    "Microsoft": true,
-
-    "香港": true,
-
-    "台湾": true,
-
-    "日本": true,
-
-    "新加坡": true,
-
-    "韩国": true,
-
-    "美国": true,
-
-    "加拿大": true,
-
-    "英国": true,
-
-    "其他地区": true
-
-  };
-
-
-  // ================================================================
-  // 11. Built-in targets
-  // ================================================================
-
-  var builtinTargets = {
-
-    "DIRECT": true,
-
-    "REJECT": true,
-
-    "REJECT-DROP": true,
-
-    "PASS": true,
-
-    "COMPATIBLE": true,
-
-    "GLOBAL": true
-
-  };
-
-
-  // ================================================================
-  // 12. Business group detection
-  // ================================================================
-
-  function isBusinessGroupName(name) {
-
-    if (!name) {
-
-      return false;
-
-    }
-
-    var text = String(name);
-
-
-    var patterns = [
-
-      /ai/i,
-
-      /openai/i,
-
-      /chatgpt/i,
-
-      /claude/i,
-
-      /gemini/i,
-
-      /netflix/i,
-
-      /disney/i,
-
-      /disney\+/i,
-
-      /youtube/i,
-
-      /google/i,
-
-      /github/i,
-
-      /spotify/i,
-
-      /steam/i,
-
-      /tiktok/i,
-
-      /telegram/i,
-
-      /twitter/i,
-
-      /x\.com/i,
-
-      /facebook/i,
-
-      /instagram/i,
-
-      /流媒体/i,
-
-      /媒体/i,
-
-      /影音/i,
-
-      /视频/i,
-
-      /游戏/i,
-
-      /游戏专用/i,
-
-      /机场专用/i,
-
-      /节点分流/i
-
-    ];
-
-
-    for (var i = 0; i < patterns.length; i++) {
-
-      if (patterns[i].test(text)) {
-
-        return true;
-
-      }
-
-    }
-
-
-    return false;
-
-  }
-
-
-  // ================================================================
-  // 13. Auto-select detection
-  // ================================================================
-
-  function isAutoSelectGroup(name) {
-
-    if (!name) {
-
-      return false;
-
-    }
-
-
-    return (
-
-      /自动选择/i.test(name) ||
-
-      /auto[\s_-]*select/i.test(name) ||
-
-      /auto[\s_-]*test/i.test(name) ||
-
-      /测速/i.test(name)
-
-    );
-
-  }
-
-
-  // ================================================================
-  // 14. Failover detection
-  // ================================================================
-
-  function isFailoverGroup(name) {
-
-    if (!name) {
-
-      return false;
-
-    }
-
-
-    return (
-
-      /故障转移/i.test(name) ||
-
-      /failover/i.test(name) ||
-
-      /fallback/i.test(name)
-
-    );
-
-  }
-
-
-  // ================================================================
-  // 15. All-node detection
-  // ================================================================
-
-  function isAllNodeName(name) {
-
-    if (!name) {
-
-      return false;
-
-    }
-
-
-    return (
-
-      /全部节点/i.test(name) ||
-
-      /所有节点/i.test(name) ||
-
-      /全部/i.test(name) ||
-
-      /all[\s_-]*nodes?/i.test(name) ||
-
-      /all[\s_-]*proxies?/i.test(name)
-
-    );
-
-  }
-
-
-  function getProxyComposition(group) {
-
-    var result = {
-
-      total: 0,
-
-      actualNodes: 0,
-
-      groups: 0,
-
-      builtin: 0,
-
-      unknown: 0
-
-    };
-
-
-    if (
-
-      !group ||
-
-      !Array.isArray(group.proxies)
-
-    ) {
-
-      return result;
-
-    }
-
-
-    result.total =
-      group.proxies.length;
-
-
-    group.proxies.forEach(function(item) {
-
-      if (!item) {
-
-        return;
-
-      }
-
-
-      if (proxyNames.indexOf(item) !== -1) {
-
-        result.actualNodes++;
-
-        return;
-
-      }
-
-
-      if (builtinTargets[item]) {
-
-        result.builtin++;
-
-        return;
-
-      }
-
-
-      var referencedGroup =
-        originalGroups.some(function(g) {
-
-          return (
-
-            g &&
-
-            g.name === item
-
-          );
-
-        });
-
-
-      if (referencedGroup) {
-
-        result.groups++;
-
-        return;
-
-      }
-
-
-      result.unknown++;
-
-    });
-
-
-    return result;
-
-  }
-
-
-  function isAllNodesGroup(group) {
-
-    if (!group || !group.name) {
-
-      return false;
-
-    }
-
-
-    var name =
-      String(group.name);
-
-
-    if (isAllNodeName(name)) {
-
-      return true;
-
-    }
-
-
-    if (isBusinessGroupName(name)) {
-
-      return false;
-
-    }
-
-
-    var composition =
-      getProxyComposition(group);
-
-
-    if (composition.total === 0) {
-
-      return false;
-
-    }
-
-
-    if (composition.actualNodes < 2) {
-
-      return false;
-
-    }
-
-
-    var ratio =
-      composition.actualNodes /
-      composition.total;
-
-
-    if (ratio < 0.3) {
-
-      return false;
-
-    }
-
-
-    if (composition.groups > 0) {
-
-      if (composition.actualNodes >= 5) {
-
-        return true;
-
-      }
-
-      return false;
-
-    }
-
-
-    return true;
-
-  }
-
-
-  // ================================================================
-  // 16. Preserve airport basic groups
-  //
-  // IMPORTANT:
-  //
-  // v1.5.1 fixed the problem where "九云" disappeared.
-  //
-  // Never force hidden=true.
-  // ================================================================
-
-  var preservedGroups = [];
-
-
-  originalGroups.forEach(function(group) {
-
-    if (!group || !group.name) {
-
-      return;
-
-    }
-
-
-    if (managedGroups[group.name]) {
-
-      return;
-
-    }
-
-
-    var isBasic =
-
-      isAutoSelectGroup(group.name) ||
-
-      isFailoverGroup(group.name) ||
-
-      isAllNodesGroup(group);
-
-
-    if (!isBasic) {
-
-      return;
-
-    }
-
-
-    var copied =
-      JSON.parse(JSON.stringify(group));
-
-
-    // Keep airport group visible.
-
-    delete copied["hidden"];
-
-
-    preservedGroups.push(copied);
-
-  });
-
-
-  // ================================================================
-  // 17. Convert airport Auto-Select groups to URL-Test
-  // ================================================================
-
-  preservedGroups.forEach(function(group) {
-
-    if (!group || !group.name) {
-
-      return;
-
-    }
-
-
-    if (!isAutoSelectGroup(group.name)) {
-
-      return;
-
-    }
-
-
-    group.type = "url-test";
-
-
-    group.proxies =
-      proxyNames.slice();
-
-
-    group.url =
-      "https://www.gstatic.com/generate_204";
-
-
-    group.interval = 300;
-
-
-    group.timeout = 5000;
-
-
-    group.tolerance = 50;
-
-
-    group.lazy = true;
-
-
-    group["max-failed-times"] = 3;
-
-
-    group["expected-status"] = 204;
-
-
-    delete group["disable-udp"];
-
-    delete group["strategy"];
-
-  });
-
-
-  // ================================================================
-  // 18. Find airport default manual selector
-  //
-  // Purpose:
-  //
-  //   Network Test
-  //       ↓
-  //   Airport Default Selector
-  //       ↓
-  //   User-selected node
-  //
-  // Example:
-  //
-  //   网络检测
-  //       ↓
-  //      九云
-  //       ↓
-  //      台湾节点
-  //
-  // Do NOT hardcode "九云".
-  // ================================================================
-
-  function findDefaultAirportGroup() {
-
-    var candidates = [];
-
-
-    originalGroups.forEach(function(group) {
-
-      if (!group || !group.name) {
-
-        return;
-
-      }
-
-
-      var name =
-        String(group.name);
-
-
-      // Ignore groups managed by Perfect-Rules.
-
-      if (managedGroups[name]) {
-
-        return;
-
-      }
-
-
-      // Ignore automatic groups.
-
-      if (isAutoSelectGroup(name)) {
-
-        return;
-
-      }
-
-
-      // Ignore failover groups.
-
-      if (isFailoverGroup(name)) {
-
-        return;
-
-      }
-
-
-      // Ignore obvious business groups.
-
-      if (isBusinessGroupName(name)) {
-
-        return;
-
-      }
-
-
-      if (group.type !== "select") {
-
-        return;
-
-      }
-
-
-      var composition =
-        getProxyComposition(group);
-
-
-      if (composition.actualNodes < 2) {
-
-        return;
-
-      }
-
-
-      candidates.push({
-
-        group: group,
-
-        score: 0,
-
-        index: candidates.length
-
-      });
-
-    });
-
-
-    // --------------------------------------------------------------
-    // Prefer an all-node manual selector.
-    //
-    // This matches common airport structures such as:
-    //
-    //   九云
-    //   节点
-    //   全部节点
-    //
-    // where the group directly contains many actual proxy nodes.
-    // --------------------------------------------------------------
-
-    for (var i = 0; i < candidates.length; i++) {
-
-      if (isAllNodesGroup(candidates[i].group)) {
-
-        return candidates[i].group.name;
-
-      }
-
-    }
-
-
-    // --------------------------------------------------------------
-    // Fallback:
-    //
-    // Use the first suitable manual select group.
-    // --------------------------------------------------------------
-
-    if (candidates.length > 0) {
-
-      return candidates[0].group.name;
-
-    }
-
-
-    return null;
-
-  }
-
-
-  var defaultAirportGroup =
-    findDefaultAirportGroup();
-
-
-  // ================================================================
-  // 19. Remote Rule Provider base URL
-  // ================================================================
-
-  var ruleBaseURL =
-    "https://cdn.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/";
-
-
-  // ================================================================
-  // 20. Rule Provider factory
-  // ================================================================
-
-  function createRuleProvider(filename) {
-
-    return {
-
-      "type": "http",
-
-      "behavior": "classical",
-
-      "format": "yaml",
-
-      "url": ruleBaseURL + filename,
-
-      "path": "./rules/" + filename,
-
-      "interval": 86400
-
-    };
-
-  }
-
-
-  // ================================================================
-  // 21. Remote Rule Providers
-  //
-  // GitHub repository:
-  //
-  // n0de-sudo/Perfect-Rules
-  //
-  // ================================================================
-
-  config["rule-providers"] = {
-
-    "AI":
-      createRuleProvider("ai.yaml"),
-
-    "YouTube":
-      createRuleProvider("youtube.yaml"),
-
-    "Google":
-      createRuleProvider("google.yaml"),
-
-    "GitHub":
-      createRuleProvider("github.yaml"),
-
-    "Netflix":
-      createRuleProvider("netflix.yaml"),
-
-    "Spotify":
-      createRuleProvider("spotify.yaml"),
-
-    "Steam":
-      createRuleProvider("steam.yaml"),
-
-    "Telegram":
-      createRuleProvider("telegram.yaml"),
-
-    "TikTok":
-      createRuleProvider("tiktok.yaml"),
-
-    "Apple":
-      createRuleProvider("apple.yaml"),
-
-    "Microsoft":
-      createRuleProvider("microsoft.yaml"),
-
-    "NetworkTest":
-      createRuleProvider("network-test.yaml")
-
-  };
-
-
-  // ================================================================
-  // 22. Region detection
-  // ================================================================
-
-  var regionPatterns = {
-
-    "香港": [
-
-      /香港/i,
-
-      /\bHK\b/i,
-
-      /HKG/i,
-
-      /Hong\s*Kong/i,
-
-      /HongKong/i
-
-    ],
-
-
-    "台湾": [
-
-      /台湾/i,
-
-      /台灣/i,
-
-      /\bTW\b/i,
-
-      /TPE/i,
-
-      /KHH/i,
-
-      /TSA/i,
-
-      /Taiwan/i,
-
-      /Taipei/i
-
-    ],
-
-
-    "日本": [
-
-      /日本/i,
-
-      /\bJP\b/i,
-
-      /NRT/i,
-
-      /HND/i,
-
-      /KIX/i,
-
-      /CTS/i,
-
-      /FUK/i,
-
-      /Japan/i,
-
-      /Tokyo/i,
-
-      /Osaka/i
-
-    ],
-
-
-    "新加坡": [
-
-      /新加坡/i,
-
-      /\bSG\b/i,
-
-      /SIN/i,
-
-      /XSP/i,
-
-      /Singapore/i
-
-    ],
-
-
-    "韩国": [
-
-      /韩国/i,
-
-      /韓國/i,
-
-      /\bKR\b/i,
-
-      /ICN/i,
-
-      /GMP/i,
-
-      /PUS/i,
-
-      /Korea/i,
-
-      /Seoul/i
-
-    ],
-
-
-    "美国": [
-
-      /美国/i,
-
-      /\bUS\b/i,
-
-      /\bUSA\b/i,
-
-      /LAX/i,
-
-      /SFO/i,
-
-      /JFK/i,
-
-      /SJC/i,
-
-      /United\s*States/i,
-
-      /America/i,
-
-      /Los\s*Angeles/i,
-
-      /San\s*Jose/i,
-
-      /New\s*York/i
-
-    ],
-
-
-    "加拿大": [
-
-      /加拿大/i,
-
-      /Canada/i,
-
-      /Toronto/i,
-
-      /Vancouver/i,
-
-      /Montreal/i
-
-    ],
-
-
-    "英国": [
-
-      /英国/i,
-
-      /UK/i,
-
-      /United\s*Kingdom/i,
-
-      /England/i,
-
-      /London/i,
-
-      /Manchester/i
-
-    ]
-
-  };
-
-
-  function detectRegion(proxyName) {
-
-    for (var region in regionPatterns) {
-
-      if (!regionPatterns.hasOwnProperty(region)) {
-
-        continue;
-
-      }
-
-
-      var patterns =
-        regionPatterns[region];
-
-
-      for (var i = 0; i < patterns.length; i++) {
-
-        if (patterns[i].test(proxyName)) {
-
-          return region;
-
-        }
-
-      }
-
-    }
-
-
-    return "其他地区";
-
-  }
-
-
-  // ================================================================
-  // 23. Build region node lists
-  // ================================================================
-
-  var regionNodes = {
-
-    "香港": [],
-
-    "台湾": [],
-
-    "日本": [],
-
-    "新加坡": [],
-
-    "韩国": [],
-
-    "美国": [],
-
-    "加拿大": [],
-
-    "英国": [],
-
-    "其他地区": []
-
-  };
-
-
-  originalProxies.forEach(function(proxy) {
-
-    if (!proxy || !proxy.name) {
-
-      return;
-
-    }
-
-
-    var region =
-      detectRegion(String(proxy.name));
-
-
-    regionNodes[region].push(
-
-      proxy.name
-
-    );
-
-  });
-
-
-  // ================================================================
-  // 24. Region order
-  // ================================================================
-
-  var regionOrder = [
-
-    "香港",
-
-    "台湾",
-
-    "日本",
-
-    "新加坡",
-
-    "韩国",
-
-    "美国",
-
-    "加拿大",
-
-    "英国",
-
-    "其他地区"
-
-  ];
-
-
-  // ================================================================
-  // 25. Create region URL-Test groups
-  // ================================================================
-
-  var regionGroups = [];
-
-
-  regionOrder.forEach(function(region) {
-
-    var nodes =
-      regionNodes[region];
-
-
-    if (
-
-      !nodes ||
-
-      nodes.length === 0
-
-    ) {
-
-      return;
-
-    }
-
-
-    var group = {
-
-      "name": region,
-
-      "type": "url-test",
-
-      "proxies": nodes,
-
-      "url":
-        "https://www.gstatic.com/generate_204",
-
-      "interval": 300,
-
-      "timeout": 5000,
-
-      "tolerance": 50,
-
-      "lazy": true,
-
-      "max-failed-times": 3,
-
-      "expected-status": 204
-
-    };
-
-
-    var icon =
-      getGroupIcon(region);
-
-
-    if (icon) {
-
-      group["icon"] = icon;
-
-    }
-
-
-    regionGroups.push(group);
-
-  });
-
-
-  var availableRegions =
-    regionGroups.map(function(group) {
-
-      return group.name;
-
-    });
-
-
-  // ================================================================
-  // 26. Domestic Direct
-  // ================================================================
-
-  var domesticDirectGroup = {
-
-    "name": "国内直连",
-
-    "type": "select",
-
-    "proxies": [
-
-      "DIRECT"
-
-    ]
-
-  };
-
-
-  var domesticIcon =
-    getGroupIcon("国内直连");
-
-
-  if (domesticIcon) {
-
-    domesticDirectGroup["icon"] =
-      domesticIcon;
-
-  }
-
-
-  // ================================================================
-  // 27. One-click Proxy
-  // ================================================================
-
-  var mainSelector = {
-
-    "name": "一键代理",
-
-    "type": "select",
-
-    "proxies":
-      availableRegions.concat([
-
-        "国内直连"
-
-      ])
-
-  };
-
-
-  var mainIcon =
-    getGroupIcon("一键代理");
-
-
-  if (mainIcon) {
-
-    mainSelector["icon"] =
-      mainIcon;
-
-  }
-
-
-  // ================================================================
-  // 28. Service groups
-  // ================================================================
-
-  function createBusinessGroup(name) {
-
-    var group = {
-
-      "name": name,
-
-      "type": "select",
-
-      "proxies":
-        availableRegions.concat([
-
-          "国内直连"
-
-        ])
-
-    };
-
-
-    var icon =
-      getGroupIcon(name);
-
-
-    if (icon) {
-
-      group["icon"] = icon;
-
-    }
-
-
-    return group;
-
-  }
-
-
-  var businessGroups = [
-
-    createBusinessGroup("AI"),
-
-    createBusinessGroup("YouTube"),
-
-    createBusinessGroup("Google"),
-
-    createBusinessGroup("GitHub"),
-
-    createBusinessGroup("Netflix"),
-
-    createBusinessGroup("Spotify"),
-
-    createBusinessGroup("Steam"),
-
-    createBusinessGroup("Telegram"),
-
-    createBusinessGroup("TikTok"),
-
-    createBusinessGroup("Apple"),
-
-    createBusinessGroup("Microsoft")
-
-  ];
-
-
-  // ================================================================
-  // 29. Network Test
-  //
-  // IMPORTANT:
-  //
-  // Network Test follows the airport's default manual selector.
-  //
-  // Example:
-  //
-  //   九云
-  //      ↓
-  //   台湾节点
-  //
-  // Network Test:
-  //
-  //   网络检测
-  //      ↓
-  //     九云
-  //      ↓
-  //   台湾节点
-  //
-  // Therefore the network diagnostic websites will test the same
-  // outbound proxy selected by the user in the airport's default
-  // manual selector.
-  //
-  // ================================================================
-
-  var networkTestGroup = {
-
-    "name": "网络检测",
-
-    "type": "select",
-
-    "proxies": []
-
-  };
-
-
-  if (defaultAirportGroup) {
-
-    networkTestGroup["proxies"] = [
-
-      defaultAirportGroup
-
-    ];
-
-  } else {
-
-    // Fallback:
-    //
-    // If no suitable airport manual selector can be detected,
-    // follow the Perfect-Rules main selector instead.
-
-    networkTestGroup["proxies"] = [
-
-      "一键代理"
-
-    ];
-
-  }
-
-
-  var networkTestIcon =
-    getGroupIcon("网络检测");
-
-
-  if (networkTestIcon) {
-
-    networkTestGroup["icon"] =
-      networkTestIcon;
-
-  }
-
-
-  // ================================================================
-  // 30. Final proxy-group list
-  //
-  // IMPORTANT:
-  //
-  // Airport groups are preserved.
-  //
-  // Example:
-  //
-  //   九云
-  //
-  // remains visible.
-  //
-  // Network Test follows the airport default selector.
-  //
-  // ================================================================
-
-  config["proxy-groups"] =
-
-    preservedGroups
-
-      .concat(businessGroups)
-
-      .concat([
-
-        networkTestGroup
-
-      ])
-
-      .concat(regionGroups)
-
-      .concat([
-
-        domesticDirectGroup,
-
-        mainSelector
-
-      ]);
-
-
-  // ================================================================
-  // 31. Routing rules
-  //
-  // IMPORTANT:
-  //
-  // Rule Providers are deliberately ordered:
-  //
-  // NetworkTest
-  // AI
-  // YouTube
-  // Google
-  // GitHub
-  // Netflix
-  // Spotify
-  // Steam
-  // Telegram
-  // TikTok
-  // Apple
-  // Microsoft
-  // CN / Private
-  // MATCH
-  //
-  // YouTube MUST be before Google.
-  //
-  // ================================================================
-
-  config["rules"] = [
-
-    // --------------------------------------------------------------
-    // Private / LAN
-    // --------------------------------------------------------------
-
-    "DOMAIN-SUFFIX,lan,DIRECT",
-
-    "DOMAIN-SUFFIX,local,DIRECT",
-
-    "DOMAIN-SUFFIX,localhost,DIRECT",
-
-    "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
-
-    "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
-
-    "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
-
-    "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
-
-
-    // --------------------------------------------------------------
-    // Network Test
-    // --------------------------------------------------------------
-
-    "RULE-SET,NetworkTest,网络检测",
-
-
-    // --------------------------------------------------------------
-    // AI
-    // --------------------------------------------------------------
-
-    "RULE-SET,AI,AI",
-
-
-    // --------------------------------------------------------------
-    // YouTube
-    //
-    // MUST be before Google.
-    // --------------------------------------------------------------
-
-    "RULE-SET,YouTube,YouTube",
-
-
-    // --------------------------------------------------------------
-    // Google
-    // --------------------------------------------------------------
-
-    "RULE-SET,Google,Google",
-
-
-    // --------------------------------------------------------------
-    // GitHub
-    // --------------------------------------------------------------
-
-    "RULE-SET,GitHub,GitHub",
-
-
-    // --------------------------------------------------------------
-    // Netflix
-    // --------------------------------------------------------------
-
-    "RULE-SET,Netflix,Netflix",
-
-
-    // --------------------------------------------------------------
-    // Spotify
-    // --------------------------------------------------------------
-
-    "RULE-SET,Spotify,Spotify",
-
-
-    // --------------------------------------------------------------
-    // Steam
-    // --------------------------------------------------------------
-
-    "RULE-SET,Steam,Steam",
-
-
-    // --------------------------------------------------------------
-    // Telegram
-    // --------------------------------------------------------------
-
-    "RULE-SET,Telegram,Telegram",
-
-
-    // --------------------------------------------------------------
-    // TikTok
-    // --------------------------------------------------------------
-
-    "RULE-SET,TikTok,TikTok",
-
-
-    // --------------------------------------------------------------
-    // Apple
-    // --------------------------------------------------------------
-
-    "RULE-SET,Apple,Apple",
-
-
-    // --------------------------------------------------------------
-    // Microsoft
-    // --------------------------------------------------------------
-
-    "RULE-SET,Microsoft,Microsoft",
-
-
-    // --------------------------------------------------------------
-    // Private
-    // --------------------------------------------------------------
-
-    "GEOSITE,private,国内直连",
-
-    "GEOIP,private,国内直连,no-resolve",
-
-
-    // --------------------------------------------------------------
-    // China
-    // --------------------------------------------------------------
-
-    "GEOSITE,cn,国内直连",
-
-    "GEOIP,cn,国内直连,no-resolve",
-
-
-    // --------------------------------------------------------------
-    // Final
-    // --------------------------------------------------------------
-
-    "MATCH,一键代理"
-
-  ];
-
-
-  // ================================================================
-  // 32. Return generated config
-  // ================================================================
-
-  return config;
-
-}
+# ============================================================
+# 阿尔忒弥斯实验室 · Clash 完美分流 3.0 (V7.5 电脑优化版)
+# 面向 Clash Verge / Mihomo / ShellCrash (适用于 Windows / macOS)
+# ============================================================
+
+# ============================================================
+# 核心网络设置
+# ============================================================
+
+log-level: info
+global-client-fingerprint: chrome
+tcp-concurrent: true
+unified-delay: true
+keep-alive-interval: 30
+
+geodata-mode: true
+geo-auto-update: true
+geo-update-interval: 48
+
+# Geo 库镜像（单条 URL 字符串，严禁数组）
+geox-url:
+  geoip: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip-lite.dat"
+  geosite: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
+  mmdb: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country-lite.mmdb"
+  asn: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb"
+
+profile:
+  store-selections: true
+  store-fake-ip: true
+
+sniff:
+  enable: true
+  overwrite-dns: true
+  sniff-tls-sni: true
+  force-dns-mapping: true
+  sniffing:
+    - HTTP
+    - TLS
+    - QUIC
+
+# ============================================================
+# DNS 防污染与防泄漏设置
+# ============================================================
+
+dns:
+  enable: true
+  respect-rules: true
+  listen: 127.0.0.1:1053
+  ipv6: false
+
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - '*.lan'
+    - '+.local'
+    - '+.localhost'
+    - '+.msftconnecttest.com'
+    - '+.msftncsi.com'
+    - 'time.*.com'
+    - 'ntp.*.com'
+    - '+.pool.ntp.org'
+
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
+  default-nameserver:
+    - 223.5.5.5
+    - 223.6.6.6
+
+  # 安全 10 类海外安全 DNS 解析（不含 crypto，保持红线不动）
+  nameserver-policy:
+    'geosite:cn':
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+    '+.lan':
+      - 223.5.5.5
+      - 223.6.6.6
+    '+.localhost':
+      - 223.5.5.5
+      - 223.6.6.6
+    'geosite:google,youtube,openai,anthropic,telegram,twitter,facebook,instagram,netflix,disney':
+      - https://8.8.8.8/dns-query
+      - https://1.1.1.1/dns-query
+
+  fallback:
+    - tls://8.8.8.8
+    - tls://1.1.1.1
+    - https://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    domain:
+      - '+.google.com'
+      - '+.googleapis.com'
+      - '+.googleusercontent.com'
+      - '+.gstatic.com'
+      - '+.youtube.com'
+      - '+.ytimg.com'
+      - '+.youtube-nocookie.com'
+      - '+.openai.com'
+      - '+.chatgpt.com'
+      - '+.oaistatic.com'
+      - '+.oaiusercontent.com'
+      - '+.anthropic.com'
+      - '+.claude.ai'
+      - '+.telegram.org'
+      - '+.t.me'
+      - '+.facebook.com'
+      - '+.instagram.com'
+      - '+.twitter.com'
+      - '+.x.com'
+      - '+.netflix.com'
+      - '+.nflxvideo.net'
+      - '+.disneyplus.com'
+    ipcidr:
+      - 240.0.0.0/4
+      - 0.0.0.0/32
+      - 127.0.0.1/32
+      - 100.64.0.0/10
+
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
+# ============================================================
+# Rule Providers
+# ============================================================
+
+rule-providers:
+  ads:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: "https://fastly.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/ads.yaml"
+    path: ./rules/ads.yaml
+
+  ai:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: "https://fastly.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/ai.yaml"
+    path: ./rules/ai.yaml
+
+  youtube:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: "https://fastly.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/youtube.yaml"
+    path: ./rules/youtube.yaml
+
+  crypto:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: "https://fastly.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/crypto.yaml"
+    path: ./rules/crypto.yaml
+
+  disney:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: "https://fastly.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/disney.yaml"
+    path: ./rules/disney.yaml
+
+  apple:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: "https://fastly.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/apple.yaml"
+    path: ./rules/apple.yaml
+
+  google:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: "https://fastly.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/google.yaml"
+    path: ./rules/google.yaml
+
+  software:
+    type: http
+    behavior: classical
+    format: yaml
+    interval: 86400
+    url: "https://fastly.jsdelivr.net/gh/n0de-sudo/Perfect-Rules@main/Clash/rules/software.yaml"
+    path: ./rules/software.yaml
+
+# ============================================================
+# Proxy Groups
+# ============================================================
+
+proxy-groups:
+  - name: "🚀 默认代理 [自选]"
+    type: select
+    proxies:
+      - "♻️ 自动选择 [系统]"
+      - "🇭🇰 香港节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇺🇸 美国节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+
+  - name: "🤖 Google AI [自选]"
+    type: select
+    proxies:
+      - "🇺🇸 美国节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇭🇰 香港节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+      - DIRECT
+
+  - name: "🤖 OpenAI AI [自选]"
+    type: select
+    proxies:
+      - "🇺🇸 美国节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🇭🇰 香港节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+      - DIRECT
+
+  - name: "📺 油管专用 [自选]"
+    type: select
+    proxies:
+      - "🇭🇰 香港节点 [系统]"
+      - "🇺🇸 美国节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+      - DIRECT
+
+  - name: "🎬 流媒体 [自选]"
+    type: select
+    proxies:
+      - "🇺🇸 美国节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇭🇰 香港节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+      - DIRECT
+
+  - name: "💬 电报专用 [自选]"
+    type: select
+    proxies:
+      - "🇭🇰 香港节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇺🇸 美国节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+      - DIRECT
+
+  - name: "Ⓜ️ 微软服务 [自选]"
+    type: select
+    proxies:
+      - DIRECT
+      - "🚀 默认代理 [自选]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇺🇸 美国节点 [系统]"
+      - "🇭🇰 香港节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌐 全部节点 [系统]"
+
+  - name: "🍎 苹果服务 [自选]"
+    type: select
+    proxies:
+      - DIRECT
+      - "🚀 默认代理 [自选]"
+      - "🇭🇰 香港节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇺🇸 美国节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌐 全部节点 [系统]"
+
+  - name: "🔍 谷歌服务 [自选]"
+    type: select
+    proxies:
+      - "🇺🇸 美国节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇭🇰 香港节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+      - DIRECT
+
+  - name: "💰 币圈专用 [自选]"
+    type: select
+    proxies:
+      - "🇭🇰 香港节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇺🇸 美国节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+      - DIRECT
+
+  - name: "🖥️ 软件分流 [自选]"
+    type: select
+    proxies:
+      - "🚀 默认代理 [自选]"
+      - "♻️ 自动选择 [系统]"
+      - "🇭🇰 香港节点 [系统]"
+      - "🇯🇵 日本节点 [系统]"
+      - "🇸🇬 新加坡节点 [系统]"
+      - "🇺🇸 美国节点 [系统]"
+      - "🇹🇼 台湾节点 [系统]"
+      - "🌍 其他地区 [系统]"
+      - "🌐 全部节点 [系统]"
+      - DIRECT
+
+  - name: "🌐 全部节点 [系统]"
+    type: select
+    include-all-proxies: true
+    exclude-type: "Direct"
+
+  - name: "♻️ 自动选择 [系统]"
+    type: url-test
+    include-all-proxies: true
+    exclude-type: "Direct"
+    exclude-filter: '(?i)官网|流量|剩余|到期|过期|套餐|订阅|重置|traffic|expire|expired|subscription|reset|official|website'
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    lazy: true
+
+  - name: "🇭🇰 香港节点 [系统]"
+    type: url-test
+    include-all-proxies: true
+    filter: '(?i)🇭🇰|香港|港|\bHK\b|\bHKG\b|Hong[ -]?Kong'
+    exclude-filter: '(?i)官网|流量|剩余|到期|过期|套餐|订阅|重置|traffic|expire|expired|subscription|reset|official|website'
+    exclude-type: "Direct"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    lazy: true
+
+  - name: "🇯🇵 日本节点 [系统]"
+    type: url-test
+    include-all-proxies: true
+    filter: '(?i)🇯🇵|日本|日|\bJP\b|\bJPN\b|Japan|Tokyo|Osaka'
+    exclude-filter: '(?i)官网|流量|剩余|到期|过期|套餐|订阅|重置|traffic|expire|expired|subscription|reset|official|website'
+    exclude-type: "Direct"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    lazy: true
+
+  - name: "🇸🇬 新加坡节点 [系统]"
+    type: url-test
+    include-all-proxies: true
+    filter: '(?i)🇸🇬|新加坡|新国|\bSG\b|\bSGP\b|Singapore'
+    exclude-filter: '(?i)官网|流量|剩余|到期|过期|套餐|订阅|重置|traffic|expire|expired|subscription|reset|official|website'
+    exclude-type: "Direct"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    lazy: true
+
+  - name: "🇺🇸 美国节点 [系统]"
+    type: url-test
+    include-all-proxies: true
+    filter: '(?i)🇺🇸|美国|美|\bUS\b|\bUSA\b|United[ -]?States|America|Los[ -]?Angeles|New[ -]?York|San[ -]?Francisco'
+    exclude-filter: '(?i)官网|流量|剩余|到期|过期|套餐|订阅|重置|traffic|expire|expired|subscription|reset|official|website'
+    exclude-type: "Direct"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    lazy: true
+
+  - name: "🇹🇼 台湾节点 [系统]"
+    type: url-test
+    include-all-proxies: true
+    filter: '(?i)🇹🇼|台湾|台|\bTW\b|\bTWN\b|Taiwan|Taipei'
+    exclude-filter: '(?i)官网|流量|剩余|到期|过期|套餐|订阅|重置|traffic|expire|expired|subscription|reset|official|website'
+    exclude-type: "Direct"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+    lazy: true
+
+  - name: "🌍 其他地区 [系统]"
+    type: select
+    include-all-proxies: true
+    filter: '(?i)^(?!.*(?:🇭🇰|🇯🇵|🇸🇬|🇺🇸|🇹🇼|香港|日本|新加坡|美国|台湾|\bHK\b|\bHKG\b|\bJP\b|\bJPN\b|\bSG\b|\bSGP\b|\bUS\b|\bUSA\b|\bTW\b|\bTWN\b|Hong[ -]?Kong|Japan|Tokyo|Osaka|Singapore|United[ -]?States|America|Los[ -]?Angeles|New[ -]?York|San[ -]?Francisco|Taiwan|Taipei)).*'
+    exclude-filter: '(?i)官网|流量|剩余|到期|过期|套餐|订阅|重置|traffic|expire|expired|subscription|reset|official|website'
+    exclude-type: "Direct"
+
+  - name: "🛑 广告拦截 [系统]"
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+
+# ============================================================
+# Rules (分流规则)
+# ============================================================
+
+rules:
+  # ===== 0. 游戏 / 下载软件真实 CDN 直连 (新增 8 条，防跑爆代理流量) =====
+  # Steam 下载直连
+  - "DOMAIN-SUFFIX,steamserver.net,DIRECT"
+  - "DOMAIN-SUFFIX,steamcontent.com,DIRECT"
+  # Epic 下载直连
+  - "DOMAIN-SUFFIX,epicgames-内部工具1.akamaized.net,DIRECT"
+  - "DOMAIN-SUFFIX,epicgames-内部工具2.akamaized.net,DIRECT"
+  # EA 下载直连
+  - "DOMAIN-SUFFIX,cdn-ptrp.ea.com,DIRECT"
+  - "DOMAIN-SUFFIX,origin2-a.akamaihd.net,DIRECT"
+  # 暴雪下载直连
+  - "DOMAIN-SUFFIX,blzddist1-a.akamaihd.net,DIRECT"
+  - "DOMAIN-SUFFIX,dist.blizzard.com,DIRECT"
+
+  # ===== QUIC 降级保险丝 (默认注释态，油管/谷歌卡顿时放开) =====
+  # - "AND,((NETWORK,UDP),(DPORT,443)),REJECT"
+
+  # ===== 1. 自定义强制直连 =====
+  - "DOMAIN-KEYWORD,lanmeiju,DIRECT"
+  - "DOMAIN-SUFFIX,lanmeiju.com,DIRECT"
+
+  # ===== 2. 系统更新 CDN（直连防消耗代理流量）=====
+  - "DOMAIN-SUFFIX,swcdn.apple.com,DIRECT"
+  - "DOMAIN-SUFFIX,swdist.apple.com,DIRECT"
+  - "DOMAIN-SUFFIX,swscan.apple.com,DIRECT"
+  - "DOMAIN-SUFFIX,updates-http.cdn-apple.com,DIRECT"
+  - "DOMAIN-SUFFIX,dl.delivery.mp.microsoft.com,DIRECT"
+  - "DOMAIN-SUFFIX,ts2.microsoft.com,DIRECT"
+  - "DOMAIN-SUFFIX,delivery.mp.microsoft.com,DIRECT"
+
+  # ===== 3. 局域网与私有地址直连 =====
+  - "GEOSITE,private,DIRECT"
+  - "GEOIP,private,DIRECT,no-resolve"
+
+  # ===== 4. 广告拦截 =====
+  - "RULE-SET,ads,🛑 广告拦截 [系统]"
+
+  # ===== 5. 高优先级 AI 分流规则 =====
+  # 5.1 Google Gemini / AI 特殊精准匹配
+  - "DOMAIN-KEYWORD,generativelanguage,🤖 Google AI [自选]"
+  - "DOMAIN-SUFFIX,bard.google.com,🤖 Google AI [自选]"
+  - "DOMAIN-SUFFIX,gemini.google.com,🤖 Google AI [自选]"
+  - "DOMAIN-SUFFIX,generativelanguage.googleapis.com,🤖 Google AI [自选]"
+  - "DOMAIN-SUFFIX,aistudio.google.com,🤖 Google AI [自选]"
+  - "DOMAIN-SUFFIX,bardai.googleapis.com,🤖 Google AI [自选]"
+
+  # 5.2 OpenAI / Claude / Copilot
+  - "DOMAIN-SUFFIX,openai.com,🤖 OpenAI AI [自选]"
+  - "DOMAIN-SUFFIX,chatgpt.com,🤖 OpenAI AI [自选]"
+  - "DOMAIN-SUFFIX,oaistatic.com,🤖 OpenAI AI [自选]"
+  - "DOMAIN-SUFFIX,oaiusercontent.com,🤖 OpenAI AI [自选]"
+  - "DOMAIN-SUFFIX,sora.com,🤖 OpenAI AI [自选]"
+  - "DOMAIN-SUFFIX,anthropic.com,🤖 OpenAI AI [自选]"
+  - "DOMAIN-SUFFIX,claude.ai,🤖 OpenAI AI [自选]"
+  - "DOMAIN-SUFFIX,copilot.microsoft.com,🤖 OpenAI AI [自选]"
+
+  # 5.3 规则集兜底 AI 站点
+  - "RULE-SET,ai,🤖 OpenAI AI [自选]"
+
+  # ===== 6. 虚拟货币 / 币圈分流 =====
+  - "DOMAIN-SUFFIX,gemini.com,💰 币圈专用 [自选]"
+  - "RULE-SET,crypto,💰 币圈专用 [自选]"
+
+  # ===== 7. 音视频与流媒体 =====
+  - "DOMAIN-SUFFIX,youtube.com,📺 油管专用 [自选]"
+  - "DOMAIN-SUFFIX,youtu.be,📺 油管专用 [自选]"
+  - "DOMAIN-SUFFIX,googlevideo.com,📺 油管专用 [自选]"
+  - "RULE-SET,youtube,📺 油管专用 [自选]"
+  - "RULE-SET,disney,🎬 流媒体 [自选]"
+  - "GEOSITE,netflix,🎬 流媒体 [自选]"
+
+  # ===== 8. 电报 Telegram =====
+  - "DOMAIN-SUFFIX,t.me,💬 电报专用 [自选]"
+  - "DOMAIN-SUFFIX,telegram.org,💬 电报专用 [自选]"
+  - "DOMAIN-SUFFIX,telegram.me,💬 电报专用 [自选]"
+  - "DOMAIN-KEYWORD,telegram,💬 电报专用 [自选]"
+  - "GEOSITE,telegram,💬 电报专用 [自选]"
+  - "GEOIP,telegram,💬 电报专用 [自选],no-resolve"
+
+  # ===== 9. 国内主流视频站与 CDN（强制直连）=====
+  - "DOMAIN-SUFFIX,bilibili.com,DIRECT"
+  - "DOMAIN-SUFFIX,biligame.com,DIRECT"
+  - "DOMAIN-SUFFIX,biliintl.com,DIRECT"
+  - "DOMAIN-SUFFIX,acg.tv,DIRECT"
+  - "DOMAIN-SUFFIX,youku.com,DIRECT"
+  - "DOMAIN-SUFFIX,iqiyi.com,DIRECT"
+  - "DOMAIN-SUFFIX,iq.com,DIRECT"
+  - "DOMAIN-SUFFIX,mgtv.com,DIRECT"
+  - "DOMAIN-SUFFIX,sohu.com,DIRECT"
+  - "DOMAIN-SUFFIX,v.qq.com,DIRECT"
+  - "DOMAIN-SUFFIX,hdslb.com,DIRECT"
+  - "DOMAIN-SUFFIX,bilivideo.com,DIRECT"
+  - "DOMAIN-SUFFIX,bilivideo.cn,DIRECT"
+  - "DOMAIN-SUFFIX,cibntv.net,DIRECT"
+  - "DOMAIN-SUFFIX,alicdn.com,DIRECT"
+  - "DOMAIN-SUFFIX,gslb.com,DIRECT"
+  - "DOMAIN-SUFFIX,wasu.tv,DIRECT"
+  - "DOMAIN-SUFFIX,cdnmango.com,DIRECT"
+  - "DOMAIN-SUFFIX,sandai.net,DIRECT"
+  - "DOMAIN-SUFFIX,qpic.cn,DIRECT"
+  - "DOMAIN-SUFFIX,gtimg.cn,DIRECT"
+  - "DOMAIN-SUFFIX,gtimg.com,DIRECT"
+  - "DOMAIN-SUFFIX,myqcloud.com,DIRECT"
+  - "DOMAIN-SUFFIX,qq.com,DIRECT"
+  - "DOMAIN-SUFFIX,qy.net,DIRECT"
+  - "DOMAIN-SUFFIX,iqiyipic.com,DIRECT"
+  - "DOMAIN-SUFFIX,ykimg.com,DIRECT"
+  - "DOMAIN-SUFFIX,biliimg.com,DIRECT"
+  - "DOMAIN-SUFFIX,biliapi.net,DIRECT"
+  - "DOMAIN-SUFFIX,bilibili.cn,DIRECT"
+  - "DOMAIN-SUFFIX,douyin.com,DIRECT"
+  - "DOMAIN-SUFFIX,snssdk.com,DIRECT"
+  - "DOMAIN-SUFFIX,pstatp.com,DIRECT"
+  - "DOMAIN-SUFFIX,ixigua.com,DIRECT"
+  - "DOMAIN-SUFFIX,kuaishou.com,DIRECT"
+  - "DOMAIN-SUFFIX,gifshow.com,DIRECT"
+  - "DOMAIN-SUFFIX,miguvideo.com,DIRECT"
+  - "DOMAIN-SUFFIX,migu.cn,DIRECT"
+  - "DOMAIN-SUFFIX,1905.com,DIRECT"
+
+  # ===== 10. Steam 社区 / GitHub / 常用软件 =====
+  - "DOMAIN-SUFFIX,cm.steampowered.com,DIRECT"
+  - "DOMAIN-SUFFIX,steampowered.com,🚀 默认代理 [自选]"
+  - "DOMAIN-SUFFIX,steamcommunity.com,🚀 默认代理 [自选]"
+  - "DOMAIN-SUFFIX,github.com,🚀 默认代理 [自选]"
+  - "DOMAIN-SUFFIX,githubusercontent.com,🚀 默认代理 [自选]"
+  - "DOMAIN-SUFFIX,githubassets.com,🚀 默认代理 [自选]"
+  - "RULE-SET,software,🖥️ 软件分流 [自选]"
+
+  # ===== 11. 科技巨头服务组 =====
+  - "RULE-SET,apple,🍎 苹果服务 [自选]"
+  - "RULE-SET,google,🔍 谷歌服务 [自选]"
+  - "GEOSITE,microsoft,Ⓜ️ 微软服务 [自选]"
+
+  # ===== 12. 大陆网络兜底（直连）=====
+  - "GEOSITE,CN,DIRECT"
+  - "GEOIP,CN,DIRECT,no-resolve"
+
+  # ===== 13. 未匹配域名兜底 =====
+  - "MATCH,🚀 默认代理 [自选]"
